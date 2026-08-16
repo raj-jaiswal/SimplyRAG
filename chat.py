@@ -10,6 +10,11 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.pinecone import PineconeVectorStore
 from pinecone import Pinecone
 
+# Voice imports
+import sounddevice as sd
+import soundfile as sf
+from transformers import pipeline
+
 
 load_dotenv()
 
@@ -56,13 +61,126 @@ chat_engine = index.as_chat_engine(
     )
 )
 
-print("RAG chatbot ready!")
-print("Type 'exit' to quit.\n")
+print("Loading speech recognition model...")
+
+whisper = pipeline(
+    "automatic-speech-recognition",
+    model="openai/whisper-base",
+)
+
+print("Speech recognition model loaded!")
+
+def record_audio():
+    sample_rate = 16000
+
+    print("\n🎙 Recording...")
+    print("Press Enter to stop recording.")
+
+    audio_chunks = []
+
+    def callback(indata, frames, time, status):
+        if status:
+            print(status)
+
+        audio_chunks.append(indata.copy())
+
+    with sd.InputStream(
+        samplerate=sample_rate,
+        channels=1,
+        dtype="float32",
+        callback=callback,
+    ):
+        input()
+
+    if not audio_chunks:
+        return None
+
+    import numpy as np
+
+    audio = np.concatenate(audio_chunks, axis=0)
+    audio = audio.flatten()
+
+    # Remove leading/trailing silence
+    threshold = 0.01
+
+    non_silent = np.where(np.abs(audio) > threshold)[0]
+
+    if len(non_silent) == 0:
+        return None
+
+    start = non_silent[0]
+    end = non_silent[-1]
+
+    padding = int(0.2 * sample_rate)
+
+    start = max(0, start - padding)
+    end = min(len(audio), end + padding)
+
+    audio = audio[start:end]
+
+    return audio, sample_rate
+
+def voice_input():
+    while True:
+
+        result = record_audio()
+
+        if result is None:
+            print("No audio recorded.")
+            continue
+
+        audio, sample_rate = result
+
+        print("Transcribing...")
+
+        transcription = whisper(
+            {
+                "raw": audio,
+                "sampling_rate": sample_rate,
+            },
+            generate_kwargs={
+                "language": "en",
+                "task": "transcribe",
+            },
+        )
+
+        text = transcription["text"].strip()
+
+        print(f"\nYou said: {text}")
+
+        print("\n[Enter] send   [r] retry   [x] cancel")
+
+        choice = input("> ").strip().lower()
+
+        if choice == "r":
+            continue
+
+        if choice == "x":
+            return None
+
+        # Empty input means send
+        return text
+
+
+print("\nRAG chatbot ready!")
+print("Type 'exit' to quit.")
+print("Type 'v' for voice input.\n")
+
 
 while True:
-    question = input("You: ")
+    question = input("You: ").strip()
     if question.lower() == "exit":
         break
+
+    if question.lower() == "v":
+
+        question = voice_input()
+
+        if not question:
+            print("Voice input cancelled.\n")
+            continue
+
+        print()
 
     response = chat_engine.chat(question)
 

@@ -4,3 +4,8 @@ llama-index-llms-openai-like
 llama-index-embeddings-huggingface
 pinecone
 python-dotenv
+
+torch
+transformers
+sounddevice
+soundfile

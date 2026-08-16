@@ -90,4 +90,4 @@ Contributions are welcome. Open an issue to discuss changes, then send a pull re
 
 ## License
 
-This repository does not include a license file. Add a license if you plan to publish or share the project.
+This repository has MIT License. Check details at: <a href="https://github.com/raj-jaiswal/SimplyRAG/blob/main/LICENSE">MIT LICENSE</a>

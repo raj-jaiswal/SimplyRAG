@@ -1,0 +1,6 @@
+llama-index
+llama-index-vector-stores-pinecone
+llama-index-llms-openai-like
+llama-index-embeddings-huggingface
+pinecone
+python-dotenv

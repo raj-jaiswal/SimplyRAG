@@ -15,7 +15,6 @@ import sounddevice as sd
 import soundfile as sf
 from transformers import pipeline
 
-
 load_dotenv()
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
@@ -37,7 +36,6 @@ pc = Pinecone(
 )
 
 pinecone_index = pc.Index("simplyrag")
-
 vector_store = PineconeVectorStore(
     pinecone_index=pinecone_index
 )
@@ -77,7 +75,6 @@ def record_audio():
     print("Press Enter to stop recording.")
 
     audio_chunks = []
-
     def callback(indata, frames, time, status):
         if status:
             print(status)
@@ -96,43 +93,31 @@ def record_audio():
         return None
 
     import numpy as np
-
     audio = np.concatenate(audio_chunks, axis=0)
     audio = audio.flatten()
 
     # Remove leading/trailing silence
     threshold = 0.01
-
     non_silent = np.where(np.abs(audio) > threshold)[0]
-
     if len(non_silent) == 0:
         return None
-
     start = non_silent[0]
     end = non_silent[-1]
 
     padding = int(0.2 * sample_rate)
-
     start = max(0, start - padding)
     end = min(len(audio), end + padding)
-
     audio = audio[start:end]
-
     return audio, sample_rate
 
 def voice_input():
     while True:
-
         result = record_audio()
-
         if result is None:
             print("No audio recorded.")
             continue
-
         audio, sample_rate = result
-
         print("Transcribing...")
-
         transcription = whisper(
             {
                 "raw": audio,
@@ -145,20 +130,14 @@ def voice_input():
         )
 
         text = transcription["text"].strip()
-
         print(f"\nYou said: {text}")
-
         print("\n[Enter] send   [r] retry   [x] cancel")
-
         choice = input("> ").strip().lower()
 
         if choice == "r":
             continue
-
         if choice == "x":
             return None
-
-        # Empty input means send
         return text
 
 
@@ -166,16 +145,13 @@ print("\nRAG chatbot ready!")
 print("Type 'exit' to quit.")
 print("Type 'v' for voice input.\n")
 
-
 while True:
     question = input("You: ").strip()
     if question.lower() == "exit":
         break
 
     if question.lower() == "v":
-
         question = voice_input()
-
         if not question:
             print("Voice input cancelled.\n")
             continue
@@ -183,6 +159,5 @@ while True:
         print()
 
     response = chat_engine.chat(question)
-
     print("\nBot:", response)
     print()

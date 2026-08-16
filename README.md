@@ -62,6 +62,15 @@ python ingest.py
 python chat.py
 ```
 
+## Voice / Audio input
+
+- The chat interface supports basic voice input. While running `python chat.py`, type `v` at the prompt to record audio, then speak. Press Enter to stop recording. After transcription you'll be prompted to send, retry (`r`), or cancel (`x`).
+- Requirements: a working microphone and the optional audio packages (for example, `sounddevice`, `soundfile`, and `transformers`). Install them if needed with:
+
+```bash
+pip install sounddevice soundfile transformers
+```
+
 The scripts are intentionally small and opinionated. If you want to change where files are read from or where the index is persisted, edit the top-level constants in the scripts or provide an `INDEX_DIR` environment variable.
 
 ## Project layout
